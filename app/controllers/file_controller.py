@@ -1,5 +1,5 @@
 import base64, magic, uuid
-from os import path, mkdir, remove
+from os import path, mkdir, remove, rename
 from sqlalchemy.orm import Session
 from app.models.FileModel import File
 from app.schemas.FileSchema import FileSchema, AlterFileSchema, SearchFileSchema, DeleteFileSchema
@@ -70,11 +70,28 @@ def edit_file(db: Session,  data: AlterFileSchema):
     file_db =  db.query(File).filter_by(id = data.id).first() 
     if(file_db is None):
         raise Exception ("File not found.")
+    
+    new_url = None
+    
+    if data.file_name is not None and file_db.file_name != data.file_name:
+        if data.file_type is not None and file_db.file_type != data.file_type:
+            new_url = f"{DEFAULT_PATH}{file_db.id_user}/{data.file_name}.{data.file_type}"
+            rename(file_db.file_url, new_url)
+        else:
+            new_url = f"{DEFAULT_PATH}{file_db.id_user}/{data.file_name}.{file_db.file_type}"
+            rename(file_db.file_url, new_url)
+
+
+    if new_url is None and data.file_type is not None and file_db.file_type != data.file_type:
+        new_url = f"{DEFAULT_PATH}{file_db.id_user}/{file_db.file_name}.{data.file_type}"
+        rename(file_db.file_url, new_url)
+
 
     try:
         db.query(File).filter_by(id = file_db.id).update({
-            File.file_name:data.file_name or file_db.file_name,
-            File.file_description:data.file_description or file_db.file_description,
+            File.file_name: data.file_name or file_db.file_name,
+            File.file_url: new_url or file_db.file_url,
+            File.file_description: data.file_description or file_db.file_description,
             File.file_type: data.file_type or file_db.file_type,
             File.public: data.public if data.public != None else file_db.public
         })
