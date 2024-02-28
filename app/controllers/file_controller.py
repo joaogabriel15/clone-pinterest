@@ -55,7 +55,6 @@ def create_file(db: Session,  data: FileSchema):
         db.commit()
     except Exception as e:
         db.rollback()
-        print('error')
         raise Exception ({
             "menssage":"Error in create file in Database.",
             "error": str(e)

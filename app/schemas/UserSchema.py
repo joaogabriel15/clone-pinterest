@@ -8,3 +8,8 @@ class UserSchema(BaseModel):
     password:  str  | None
     birth:     date | None
     is_active: bool | None
+
+class LoginSchema(BaseModel):
+    id:        int  | None
+    email:     str  | None
+    password:  str  | None
